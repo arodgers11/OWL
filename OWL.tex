@@ -1,0 +1,84 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{subfigure}
+\usepackage{wrapfig}
+\usepackage{amsmath}
+\usepackage{indentfirst}
+\hyphenpenalty=10000
+\usepackage[labelsep=space]{caption}
+\title{\huge{Regression Analysis of Overwatch League Data}}
+\author{\large{Andrew Rodgers}}
+\date{}
+\begin{document}
+	\maketitle
+	\section{Introduction}
+	The goal of this project is to perform a regression on the Overwatch League (OWL) data set. The data is a subset of a stat sheet from recent matches in the 2019 season. Excluded data points are players who did not appear in a match, thus the excluded points are rows of zeros. The quantitative variables measured are Kills(K), Deaths(D),and Ultimates(U). The categorical variable is  Role(Tank,Offense,Support). The purpose is to create a model to predict the number of Points earned, given these values for any given player in a future Overwatch League match.
+	
+	\section{Analysis}
+	\subsection{Basic MLR Regression}
+	A good place to start the analysis is with the regular, basic regression. From \textbf{Figure 1a}, we can see the p-values are around 0, so we can say the model is useful by the F-test. In \textbf{Figure 1(b)}, we can see most of the p-value for \textit{Role\_Support} is 
+	\begin{figure}[h]
+		\subfigure[ANOVA table for the full model]{\includegraphics[scale=0.7]{regression}}
+		\subfigure[ANOVA table for model with indicator variables]{\includegraphics[scale=0.7]{regression2}}
+		\caption{}
+	\end{figure}
+	\FloatBarrier
+	\subsection{Variable Selection(Optimal Subsets)}
+	In addition to Role, the data set includes a second categorical variable, Team. We exclude this predictor in our analysis simply because there are 20 responses. If we used a predictor with this many respsonses, we would not have enough data for each group to make an accurate conclusion. An Extra Sum of Squares Test confirms that Team does not contribute to the model. Before we can choose the best set of predictors for the model, we need to create indicator variables for the Role categorical variable, Tank is used as the reference group. In \textbf{Figure 2(a)}, we can clearly see in the plot of K versus Points, different roles have significantly differing slope, so we need interaction terms for K. The other plots do not have clearly different slopes, so we will use the additive model for these. With the new interaction terms, we can add the predictors \textit{K*Role\_Support} and \textit{K*Role\_Offense} to our model. Looking at \textbf{Figure 2(b)}, we can see the best model is the full model, to little surprise.
+	\begin{figure}[h]
+		\subfigure[Matrix plot of Points versus Predictors]{\includegraphics[scale=0.55]{interactions}}
+		\subfigure[Best Subsets Regressions]{\includegraphics[scale=0.7]{subsets}}
+		\caption{}
+	\end{figure}
+	\FloatBarrier
+	\subsection{Stepwise Regression}
+	This section intentionally left blank.
+ 	\subsection{Multicollinearity}
+ 	There will always be some correlation between the preditors becuase of the way the game works. For example, Kills and Deaths should be inversely related, and Ultimates and Kills should be related. There is multicollinearity present between the predictors, as demonstrated by \textbf{Figure 3(a)}. In \textbf{Figure 3(b)}, we can see almost all of the VIF's are above 5, which is another indication of multicollinearity.
+ 	\begin{figure}[h]
+	 	\centering
+		\subfigure[Correlation Matrix]{\includegraphics[scale=0.7]{correlations}}
+		\subfigure[VIF values for predictors]{\includegraphics[scale=0.7]{vif}}
+		\caption{}
+	\end{figure}
+	\FloatBarrier
+	\subsection{Outliers}
+	Looking at the 4-in-1 plots, there is only one real outlier in our regression. Calculating Cook's Distance for the data, we see this point (row 72) has a significantly higher Cook's Distance, 0.138, and a much larger DFITS, 1.227, than is expected.
+	\subsection{Transformations}
+	If we exlcude the single outlier, the data is very nice, with an excellent symmetry. Looking at histograms of the predictors, we can see all of the distributions are roughly normal or symmetrical. Scatter plots show no clear nonlinear patterns. Thus, we have no reason to suspect our data needs any transformations.
+	\begin{wrapfigure}[8]{r}{0.55\textwidth}
+		\includegraphics[scale=0.6]{4in1}
+		\caption{: 4-in-1 plot}
+	\end{wrapfigure}
+	\subsection{Assumptions}
+	All of the usual assumptions for regressions are met in this case. The 4-in-1 plot shows no correlated errors, normally distributed residuals, and constant variance. We assume the data is linearly related, so we have the correct model function. 
+	\vspace{3cm}
+	\section{Conclusions}
+	To little surprise, using the full model with the interaction terms gives us the best model.
+	\begin{multline}
+		Points = 4.77+3.937*K-1.5*D+1.850*U-9.65*Role\_Offense\\+7.68*Role\_Support+1.109*K*Role\_Support-2.03*K*Role\_Offense
+	\end{multline}
+	\indent
+	We found no evidence any transformations were needed to the data, or that any subset of the predictors would give a better model. In this case there is multicollinearity, which is due to the game rules and scoring system.
+	\\
+	\\
+	\indent
+	The full model works best because of the game rules and scoring system. In fact, the actual Points calculation is a linear combination of Kills, Deaths, and Ultimates, along with 2 other statistics not provided to us. The coefficients in this calculation differ between Roles. The game is designed so that more Ultimates leads to more Kills, which leads to less Deaths; explaining most of the multicollinearity.
+	\begin{wrapfigure}[5]{r}{0.45\textwidth}
+		\includegraphics[scale=0.8]{summary}
+	\end{wrapfigure}
+	\FloatBarrier
+	\indent
+	Looking at the predicted R-squared of our model, we can say it is fairly good at predicting values based on new data.
+	Applying the model to a small set of test data, our model overestimated Points, but not by a significant margin, likely due to random chance.
+	\\
+	\\
+	\indent
+	While performing the analyses, I was intrigued by the lack of effect that Team had on the model. Maybe it was because there are 20 teams and there would be many fewer observations per team. The more likely answer is that the consistency of skills at the professional gaming level is so high that the most likely variables to affect the model would be hard to quantify; such as teamwork, play style, or something else during the match. Based on this data alone, it does not appear that the best and worst teams would have very different models, but perhaps a larger set of observations would indicate this.
+\end{document}
